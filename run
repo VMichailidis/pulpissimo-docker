@@ -35,3 +35,5 @@ docker run -it --rm \
   -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
   --hostname ${CONTAINER_HOSTNAME} \
   pulp /bin/bash
+
+rm -rf display/
