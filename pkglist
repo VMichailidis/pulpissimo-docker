@@ -53,7 +53,9 @@ libxtst6:i386
 locales
 locales
 lxappearance
+minicom
 ocl-icd-opencl-dev
+openocd
 patchutils
 python
 python3-pip

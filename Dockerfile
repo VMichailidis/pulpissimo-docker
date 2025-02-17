@@ -2,9 +2,10 @@ FROM ubuntu:xenial AS base
 #avoid questions
 ARG DEBIAN_FRONTEND=noninteractive 
 # VARIABLES
-ARG VIVADO_FILE="Xilinx_Unified_2022.2_1014_8888.tar.gz"
-ARG VIVADO_CONFIG="vivado_config.txt"
-ARG MODELSIM_VERSION=20.1.1.720 ARG MODELSIM_URL=https://downloads.intel.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/ModelSimSetup-20.1.1.720-linux.run
+ENV VIVADO_FILE="Xilinx_Unified_2022.2_1014_8888.tar.gz"
+ENV VIVADO_CONFIG="vivado_config.txt"
+ENV MODELSIM_VERSION=20.1.1.720
+ENV MODELSIM_URL=https://downloads.intel.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/ModelSimSetup-20.1.1.720-linux.run
 ENV HOME=/home/pulp
 ENV MODELSIM_DIR="${HOME}/intelFPGA"
 
@@ -22,9 +23,9 @@ USER root
 RUN sed -i -e "s%http://[^ ]\+%http://ftp.jaist.ac.jp/pub/Linux/ubuntu/%g" /etc/apt/sources.list
 RUN dpkg --add-architecture i386
 RUN apt-get -y update && \
-    apt-get install -y $(cat default_packages/pkglist) && \
-    apt-get autoclean && \
-    apt-get autoremove
+  apt-get install -y $(cat default_packages/pkglist) && \
+  apt-get autoclean && \
+  apt-get autoremove
 USER pulp
 RUN python3 -m pip install --user -r ${HOME}/default_packages/requirements.txt
 
@@ -70,38 +71,49 @@ RUN chmod a+x modelsim-${MODELSIM_VERSION}-linux.run && \
     --accept_eula 1 --installdir ${MODELSIM_DIR} && \
     rm -rf modelsim-${MODELSIM_VERSION}-linux.run ${MODELSIM_DIR}/uninstall
 
+WORKDIR ${HOME}
+
 FROM modelsim AS final
 
 USER root
-WORKDIR ${HOME}
+RUN mkdir ${HOME}/pulp-platform
+WORKDIR ${HOME}/pulp-platform
 # RISC-V GNU compiler toolchain 
 RUN git clone --recursive --branch renzo-isa https://github.com/pulp-platform/pulp-riscv-gnu-toolchain
-WORKDIR ${HOME}/pulp-riscv-gnu-toolchain
+WORKDIR ${HOME}/pulp-platform/pulp-riscv-gnu-toolchain
 RUN git checkout 5d39fed
 RUN git checkout -b development # development will happen from this branch onward
 # build the linux multilib cross compiler
 RUN ./configure --prefix=/opt/riscv --with-arch=rv32imc --with-cmodel=medlow --enable-multilib
 RUN make
 
-WORKDIR ${HOME}
+WORKDIR ${HOME}/pulp-platform
 # Setup pulp-runtime
 # add toolchain to path
 ENV PULP_RISCV_GCC_TOOLCHAIN=/opt/riscv
 ENV PATH=${PULP_RISCV_GCC_TOOLCHAIN}/bin:${PATH}
 
 RUN git clone --recursive https://github.com/pulp-platform/pulp-runtime/
-WORKDIR ${HOME}/pulp-runtime
+WORKDIR ${HOME}/pulp-platform/pulp-runtime
 RUN git checkout a39271c
 RUN git checkout -b development # development will happen from this branch onward
 ENV PATH=${HOME}/pulp-runtime/bin:${PATH}
 
-WORKDIR ${HOME}
+WORKDIR ${HOME}/pulp-platform
 # pulpissimo 
 ENV VSIM_PATH=pulpissimo/sim
 RUN git clone --recursive https://github.com/pulp-platform/pulpissimo
-WORKDIR ${HOME}/pulpissimo
+WORKDIR ${HOME}/pulp-platform/pulpissimo
 RUN git checkout 1045d39 
 RUN git checkout -b development
+
+
+WORKDIR ${HOME}/pulp-platform
+RUN git clone --recursive https://github.com/pulp-platform/pulp-runtime-examples
+WORKDIR ${HOME}/pulp-platform/pulp-runtime-examples
+RUN git checkout 4391c68 
+RUN git checkout -b development
+
 
 USER pulp
 WORKDIR ${HOME}
