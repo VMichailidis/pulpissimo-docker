@@ -2,6 +2,7 @@ FROM ubuntu:xenial AS base
 #avoid questions
 ARG DEBIAN_FRONTEND=noninteractive 
 # VARIABLES
+ENV INSTALL_DIR="install-files"
 ENV VIVADO_FILE="Xilinx_Unified_2022.2_1014_8888.tar.gz"
 ENV VIVADO_CONFIG="vivado_config.txt"
 ENV MODELSIM_VERSION=20.1.1.720
@@ -11,23 +12,17 @@ ENV MODELSIM_DIR="${HOME}/intelFPGA"
 
 # create primary user
 RUN adduser --disabled-password --gecos '' pulp
-WORKDIR $HOME
-
-USER pulp
-RUN mkdir -p ${HOME}/default_packages
-COPY pkglist ${HOME}/default_packages/pkglist
-COPY requirements.txt ${HOME}/default_packages/requirements.txt
-
-USER root
 # install overall system dependencies
 RUN sed -i -e "s%http://[^ ]\+%http://ftp.jaist.ac.jp/pub/Linux/ubuntu/%g" /etc/apt/sources.list
 RUN dpkg --add-architecture i386
-RUN apt-get -y update && \
-  apt-get install -y $(cat default_packages/pkglist) && \
+RUN --mount=type=bind,source=./${INSTALL_DIR}/,target=/${INSTALL_DIR} \
+  apt-get -y update && \
+  apt-get install -y $(cat ${INSTALL_DIR}/pkglist) && \
   apt-get autoclean && \
   apt-get autoremove
 USER pulp
-RUN python3 -m pip install --user -r ${HOME}/default_packages/requirements.txt
+RUN --mount=type=bind,source=./${INSTALL_DIR}/,target=/${INSTALL_DIR} \
+  python3 -m pip install --user -r ${INSTALL_DIR}/requirements.txt
 
 # Set the locale
 USER root
@@ -45,15 +40,16 @@ ENV LC_ALL=en_US.UTF-8
 
 FROM base AS vivado
 # download files
-COPY ${VIVADO_CONFIG} /vivado-installer/
-COPY install_files/${VIVADO_FILE} /vivado-installer/
+# COPY install_files/${VIVADO_FILE} /vivado-installer/
+# COPY ${VIVADO_CONFIG} /vivado-installer/
 
-RUN \
-  cat /vivado-installer/${VIVADO_FILE} | tar zx --strip-components=1 -C /vivado-installer && \
+RUN mkdir /vivado-installer
+RUN --mount=type=bind,source=./${INSTALL_DIR}/,target=/${INSTALL_DIR} \
+  cat /${INSTALL_DIR}/${VIVADO_FILE} | tar zx --strip-components=1 -C /vivado-installer && \
     /vivado-installer/xsetup \
        --agree XilinxEULA,3rdPartyEULA \
        --batch Install \
-       --config /vivado-installer/${VIVADO_CONFIG} && \
+       --config /${INSTALL_DIR}/${VIVADO_CONFIG} && \
          rm -rvf /vivado-installer
 
 FROM vivado AS modelsim
