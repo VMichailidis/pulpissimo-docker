@@ -59,17 +59,16 @@ USER pulp
 WORKDIR ${MODELSIM_DIR}
 
 # Download the ModelSim installer
-RUN wget -c ${MODELSIM_URL} -O modelsim-${MODELSIM_VERSION}-linux.run
-
 # Make the installer executable, run it, and then clean up the installer
-RUN chmod a+x modelsim-${MODELSIM_VERSION}-linux.run && \
+RUN wget -c ${MODELSIM_URL} -O modelsim-${MODELSIM_VERSION}-linux.run && \
+    chmod a+x modelsim-${MODELSIM_VERSION}-linux.run && \
     ./modelsim-${MODELSIM_VERSION}-linux.run --mode unattended \
     --accept_eula 1 --installdir ${MODELSIM_DIR} && \
     rm -rf modelsim-${MODELSIM_VERSION}-linux.run ${MODELSIM_DIR}/uninstall
 
 WORKDIR ${HOME}
 
-FROM modelsim AS final
+FROM modelsim AS pulpissimo
 
 USER root
 RUN mkdir ${HOME}/pulp-platform
@@ -111,5 +110,6 @@ RUN git checkout 4391c68
 RUN git checkout -b development
 
 
+# COPY --from=pulpissimo / /
 USER pulp
 WORKDIR ${HOME}
