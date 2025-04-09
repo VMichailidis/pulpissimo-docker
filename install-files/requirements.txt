@@ -1,1 +1,12 @@
 pyelftools
+artifactory
+twisted
+prettytable
+sqlalchemy
+openpyxl==2.6.4
+xlsxwriter
+pyyaml
+numpy
+configparser
+pyvcd
+sphinx
