@@ -69,11 +69,11 @@ WORKDIR ${HOME}
 FROM modelsim AS pulpissimo
 
 USER root
-RUN mkdir ${HOME}/pulp-platform
-WORKDIR ${HOME}/pulp-platform
+RUN mkdir ${HOME}/.pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 # RISC-V GNU compiler toolchain (not prebuilt)
 RUN git clone --recursive --branch renzo-isa https://github.com/pulp-platform/pulp-riscv-gnu-toolchain
-WORKDIR ${HOME}/pulp-platform/pulp-riscv-gnu-toolchain
+WORKDIR ${HOME}/.pulp-platform/pulp-riscv-gnu-toolchain
 RUN git checkout 5d39fed
 RUN git checkout -b development # development will happen from this branch onward
 # build the linux multilib cross compiler
@@ -81,40 +81,40 @@ RUN ./configure --prefix=/opt/riscv --with-arch=rv32imc --with-cmodel=medlow --e
 RUN make
 
 # RISC-V GNU compiler toolchain (prebuilt)
-WORKDIR ${HOME}/pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 RUN curl -L -o pulp-gcc-2.1.3-centos7.tar.gz 'https://github.com/pulp-platform/riscv-gnu-toolchain/releases/download/v2.1.3/pulp-gcc-2.1.3-centos7.tar.gz' && \
   tar -xvzf pulp-gcc-2.1.3-centos7.tar.gz && \
   rm pulp-gcc-2.1.3-centos7.tar.gz
 
-WORKDIR ${HOME}/pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 # Setup pulp-runtime
 # add toolchain to path
-ENV PULP_RISCV_GCC_TOOLCHAIN=${HOME}/pulp-platform/pulp-gcc-2.1.3
+ENV PULP_RISCV_GCC_TOOLCHAIN=${HOME}/.pulp-platform/pulp-gcc-2.1.3
 ENV PATH=${PULP_RISCV_GCC_TOOLCHAIN}/bin:${PATH}
 
 RUN git clone --recursive https://github.com/pulp-platform/pulp-runtime/
-WORKDIR ${HOME}/pulp-platform/pulp-runtime
+WORKDIR ${HOME}/.pulp-platform/pulp-runtime
 RUN git checkout a39271c
 RUN git checkout -b development # development will happen from this branch onward
 ENV PATH=${HOME}/pulp-runtime/bin:${PATH}
 
-WORKDIR ${HOME}/pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 # pulpissimo 
 ENV VSIM_PATH=pulpissimo/sim
 RUN git clone --recursive https://github.com/pulp-platform/pulpissimo
-WORKDIR ${HOME}/pulp-platform/pulpissimo
+WORKDIR ${HOME}/.pulp-platform/pulpissimo
 RUN git checkout 1045d39 
 RUN git checkout -b development
 
-WORKDIR ${HOME}/pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 RUN git clone --recursive https://github.com/pulp-platform/pulp-runtime-examples
-WORKDIR ${HOME}/pulp-platform/pulp-runtime-examples
+WORKDIR ${HOME}/.pulp-platform/pulp-runtime-examples
 RUN git checkout 4391c68 
 RUN git checkout -b development
 
-WORKDIR ${HOME}/pulp-platform
+WORKDIR ${HOME}/.pulp-platform
 RUN git clone --recursive https://github.com/pulp-platform/pulp-freertos
-WORKDIR ${HOME}/pulp-platform/pulp-freertos
+WORKDIR ${HOME}/.pulp-platform/pulp-freertos
 RUN git checkout 1f333de
 RUN git checkout -b development
 
@@ -143,7 +143,7 @@ RUN ssh-keygen -A && \
 
 # Adding source command to the root user's .bashrc file
 USER root
-RUN echo "export PATH=/tools/MentorGraphics/modeltech/linux_x86_64:/home/pulp/pulp-runtime/bin:/home/pulp/pulp-platform/pulp-gcc-2.1.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/Xilinx/Vivado/2022.2/bin:/tools/Xilinx/Vitis_HLS/2022.2/bin" >> /home/pulp/.bashrc && \
+RUN echo "export PATH=/tools/MentorGraphics/modeltech/linux_x86_64:/home/pulp/pulp-runtime/bin:/home/pulp/.pulp-platform/pulp-gcc-2.1.3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tools/Xilinx/Vivado/2022.2/bin:/tools/Xilinx/Vitis_HLS/2022.2/bin" >> /home/pulp/.bashrc && \
     echo "source /tools/Xilinx/Vitis_HLS/2022.2/settings64.sh" >> /home/pulp/.bashrc && \
     echo "source /tools/Xilinx/Vivado/2022.2/settings64.sh" >> /home/pulp/.bashrc && \
     echo "export LM_LICENSE_FILE=/usr/tmp/.flexlm/LICENSE.TXT" >> /home/pulp/.bashrc && \
@@ -154,9 +154,14 @@ RUN echo "export PATH=/tools/MentorGraphics/modeltech/linux_x86_64:/home/pulp/pu
 # Change the root password
 USER root
 RUN chown -R pulp:pulp /home/pulp/.local && \
-    chown -R pulp:pulp /home/pulp/pulp-platform
+    chown -R pulp:pulp /home/pulp/.pulp-platform
+
 RUN echo 'root:ubuntu20#$' | chpasswd && \
     echo 'pulp:ubuntu20#$' | chpasswd
+
+# RUN source home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh &&\
+RUN cd /home/pulp/.pulp-platform/pulpissimo && \
+    make checkout
 
 USER pulp
 WORKDIR ${HOME}

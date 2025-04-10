@@ -28,12 +28,30 @@ xauth -f display/Xauthority add ${CONTAINER_HOSTNAME}/unix:${CONTAINER_DISPLAY} 
 socat UNIX-LISTEN:display/socket/X${CONTAINER_DISPLAY},fork TCP4:localhost:60${DISPLAY_NUMBER} &
 
 # Launch the container
-docker run -it --rm \
-  -e DISPLAY=:${CONTAINER_DISPLAY} \
-  -e XAUTHORITY=/tmp/.Xauthority \
-  -v ${PWD}/display/socket:/tmp/.X11-unix \
-  -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
-  --hostname ${CONTAINER_HOSTNAME} \
-  pulp /bin/bash
-
+if [ $1 ]; then
+  docker run -it --rm \
+    -e DISPLAY=:${CONTAINER_DISPLAY} \
+    -e XAUTHORITY=/tmp/.Xauthority \
+    -v ${PWD}/display/socket:/tmp/.X11-unix \
+    -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
+    -v $1:/home/pulp/pulp-platform \
+    --hostname ${CONTAINER_HOSTNAME} \
+    --entrypoint /bin/bash pulp && \
+    source /home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
+    cd /home/pulp/.pulp-platform/pulpissimo && \
+    source setup/vsim.sh && \
+    make build
+else
+  docker run -it --rm \
+    -e DISPLAY=:${CONTAINER_DISPLAY} \
+    -e XAUTHORITY=/tmp/.Xauthority \
+    -v ${PWD}/display/socket:/tmp/.X11-unix \
+    -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
+    --hostname ${CONTAINER_HOSTNAME} \
+    --entrypoint /bin/bash pulp && \
+    source /home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
+    cd /home/pulp/.pulp-platform/pulpissimo &&\
+    source setup/vsim.sh && \
+    make build
+fi
 rm -rf display/
