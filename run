@@ -36,11 +36,7 @@ if [ $1 ]; then
     -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
     -v $1:/home/pulp/pulp-platform \
     --hostname ${CONTAINER_HOSTNAME} \
-    --entrypoint /bin/bash pulp && \
-    source /home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
-    cd /home/pulp/.pulp-platform/pulpissimo && \
-    source setup/vsim.sh && \
-    make build
+    pulp /bin/bash
 else
   docker run -it --rm \
     -e DISPLAY=:${CONTAINER_DISPLAY} \
@@ -48,10 +44,6 @@ else
     -v ${PWD}/display/socket:/tmp/.X11-unix \
     -v ${PWD}/display/Xauthority:/tmp/.Xauthority \
     --hostname ${CONTAINER_HOSTNAME} \
-    --entrypoint /bin/bash pulp && \
-    source /home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
-    cd /home/pulp/.pulp-platform/pulpissimo &&\
-    source setup/vsim.sh && \
-    make build
+    pulp /bin/bash
 fi
 rm -rf display/

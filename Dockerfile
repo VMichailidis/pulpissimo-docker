@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as base
+FROM ubuntu:20.04 AS base
 #avoid questions
 ARG DEBIAN_FRONTEND=noninteractive 
 # VARIABLES
@@ -150,6 +150,13 @@ RUN echo "export PATH=/tools/MentorGraphics/modeltech/linux_x86_64:/home/pulp/pu
     echo "export LD_LIBRARY_PATH=/tools/Xilinx/Vivado/2022.2/lib/lnx64.o:$LD_LIBRARY_PATH" >> /home/pulp/.bashrc && \
     echo "export LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1" >> /home/pulp/.bashrc
 
+SHELL ["/bin/bash", "-c"]
+
+RUN source ~/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
+cd ~/.pulp-platform/pulpissimo/ && \
+make checkout 
+# source ~/.pulp-platform/pulpissimo/setup/vsim.sh && \
+# make build
 
 # Change the root password
 USER root
@@ -160,8 +167,13 @@ RUN echo 'root:ubuntu20#$' | chpasswd && \
     echo 'pulp:ubuntu20#$' | chpasswd
 
 # RUN source home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh &&\
-RUN cd /home/pulp/.pulp-platform/pulpissimo && \
-    make checkout
+RUN echo -e "source ~/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh \n\ 
+source ~/.pulp-platform/pulpissimo/setup/vsim.sh \n\
+cd ~/.pulp-platform/pulpissimo \n\
+make build \n\
+cd" >> ~/.bashrc 
+# RUN cd /home/pulp/.pulp-platform/pulpissimo && \
+    # make checkout
 
 USER pulp
 WORKDIR ${HOME}
