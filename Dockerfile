@@ -8,6 +8,7 @@ ENV VIVADO_CONFIG="vivado_config.txt"
 ENV MODELSIM_FILE="modelsim.tar.gz"
 ENV HOME=/home/pulp
 ENV MODELSIM_DIR="/tools"
+SHELL ["/bin/bash", "-c"]
 
 # create primary user
 RUN adduser --disabled-password --gecos '' pulp
@@ -150,9 +151,8 @@ RUN echo "export PATH=/tools/MentorGraphics/modeltech/linux_x86_64:/home/pulp/pu
     echo "export LD_LIBRARY_PATH=/tools/Xilinx/Vivado/2022.2/lib/lnx64.o:$LD_LIBRARY_PATH" >> /home/pulp/.bashrc && \
     echo "export LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1" >> /home/pulp/.bashrc
 
-SHELL ["/bin/bash", "-c"]
 
-RUN source ~/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh && \
+RUN source ~/.pulp-platform/pulp-runtime/configs/pulpissimo_ibex.sh && \
 cd ~/.pulp-platform/pulpissimo/ && \
 make checkout 
 # source ~/.pulp-platform/pulpissimo/setup/vsim.sh && \
@@ -160,18 +160,18 @@ make checkout
 
 # Change the root password
 USER root
-RUN chown -R pulp:pulp /home/pulp/.local && \
-    chown -R pulp:pulp /home/pulp/.pulp-platform
+RUN chown -R pulp:pulp /home/pulp/
 
 RUN echo 'root:ubuntu20#$' | chpasswd && \
     echo 'pulp:ubuntu20#$' | chpasswd
 
 # RUN source home/pulp/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh &&\
-RUN echo -e "source ~/.pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh \n\ 
-source ~/.pulp-platform/pulpissimo/setup/vsim.sh \n\
-cd ~/.pulp-platform/pulpissimo \n\
+RUN echo -e "source ~/pulp-platform/pulp-runtime/configs/pulpissimo_cv32.sh \n\ 
+source ~/pulp-platform/pulpissimo/setup/vsim.sh \n\
+cd ~/pulp-platform/pulpissimo \n\
 make build \n\
-cd" >> ~/.bashrc 
+cd \n\
+alias reggen='python3 ~/pulp-platform/sw/register_interface/vendor/lowrisc_opentitan/util/regtool.py'" >> ~/.bashrc 
 # RUN cd /home/pulp/.pulp-platform/pulpissimo && \
     # make checkout
 

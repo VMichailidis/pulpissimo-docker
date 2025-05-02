@@ -25,6 +25,7 @@ git
 g++-multilib
 gperf
 gtk2-engines
+hjson
 lib32gcc1
 lib32stdc++6
 lib32z1
@@ -53,6 +54,7 @@ libxtst6:i386
 locales
 locales
 lxappearance
+mako
 minicom
 ocl-icd-opencl-dev
 openocd
