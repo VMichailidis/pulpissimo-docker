@@ -1,5 +1,6 @@
 FROM ubuntu:20.04 AS base
 #avoid questions
+# test
 ARG DEBIAN_FRONTEND=noninteractive 
 # VARIABLES
 ENV INSTALL_DIR="install-files"
